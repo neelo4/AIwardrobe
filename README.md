@@ -1,21 +1,16 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
+import { render } from '../../../test-utils/renderWithProviders';
 import FaqSection from './FaqSection';
-import { BrandDataProps } from '@iag-common/iag-brand-context';
 import { useNavigate } from 'react-router-dom';
 
 // Mock the dependencies
-jest.mock('@iag-common/iag-brand-context', () => ({
-  connectIagBrand: () => (Component) => Component,
-}));
-
 jest.mock('react-router-dom', () => ({
   useNavigate: jest.fn(),
 }));
 
-const mockT = jest.fn((key) => key);
-const mockTt = jest.fn(() => ({
+const mockTtData = {
   payments: [
     {
       question: "How do I make changes to my payment details?",
@@ -36,6 +31,12 @@ const mockTt = jest.fn(() => ({
       answer: "You can check the progress of a car or home claim by going to Claims.",
     },
   ],
+};
+
+// Mock the tt function at the module level
+jest.mock('@iag-common/iag-brand-context', () => ({
+  ...jest.requireActual('@iag-common/iag-brand-context'),
+  tt: jest.fn(() => mockTtData),
 }));
 
 describe('FaqSection', () => {
@@ -44,29 +45,25 @@ describe('FaqSection', () => {
   });
 
   test('renders FAQ sections for payments and claims', () => {
-    render(<FaqSection t={mockT} tt={mockTt} />);
-
+    render(<FaqSection />);
     expect(screen.getByText('Payments')).toBeInTheDocument();
     expect(screen.getByText('Claims')).toBeInTheDocument();
   });
 
   test('renders correct number of FAQ items for payments', () => {
-    render(<FaqSection t={mockT} tt={mockTt} />);
-
+    render(<FaqSection />);
     const paymentQuestions = screen.getAllByText(/How do I make/);
     expect(paymentQuestions).toHaveLength(2);
   });
 
   test('renders correct number of FAQ items for claims', () => {
-    render(<FaqSection t={mockT} tt={mockTt} />);
-
+    render(<FaqSection />);
     const claimQuestions = screen.getAllByText(/How (long|do)/);
     expect(claimQuestions).toHaveLength(2);
   });
 
   test('expands and collapses FAQ items when clicked', () => {
-    render(<FaqSection t={mockT} tt={mockTt} />);
-
+    render(<FaqSection />);
     const firstPaymentQuestion = screen.getByText("How do I make changes to my payment details?");
     
     // Initially, the answer should not be visible
@@ -85,8 +82,7 @@ describe('FaqSection', () => {
     const mockNavigate = jest.fn();
     useNavigate.mockReturnValue(mockNavigate);
 
-    render(<FaqSection t={mockT} tt={mockTt} />);
-
+    render(<FaqSection />);
     const firstPaymentQuestion = screen.getByText("How do I make changes to my payment details?");
     fireEvent.click(firstPaymentQuestion);
 
